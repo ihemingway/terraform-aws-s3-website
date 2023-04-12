@@ -44,7 +44,7 @@ resource "aws_s3_bucket" "default" {
   #bridgecrew:skip=BC_AWS_S3_1:The bucket used for a public static website. (https://docs.bridgecrew.io/docs/s3_1-acl-read-permissions-everyone)
   #bridgecrew:skip=BC_AWS_S3_14:Skipping `Ensure all data stored in the S3 bucket is securely encrypted at rest` check until bridgecrew will support dynamic blocks (https://github.com/bridgecrewio/checkov/issues/776).
   #bridgecrew:skip=CKV_AWS_52:Skipping `Ensure S3 bucket has MFA delete enabled` due to issue using `mfa_delete` by terraform (https://github.com/hashicorp/terraform-provider-aws/issues/629).
-  acl           = "public-read"
+  #acl           = "public-read"
   bucket        = var.hostname
   tags          = module.default_label.tags
   force_destroy = var.force_destroy
@@ -108,14 +108,33 @@ resource "aws_s3_bucket" "default" {
   }
 }
 
-resource "aws_s3_bucket_ownership_controls" "example" {
+resource "aws_s3_bucket_ownership_controls" "default" {
   bucket = aws_s3_bucket.default[0].id
 
   rule {
-    object_ownership = "ObjectWriter"
+    object_ownership = "BucketOwnerPreferred"
   }
 }
-    
+
+resource "aws_s3_bucket_public_access_block" "default" {
+  bucket = aws_s3_bucket.default[0].id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_acl" "default" {
+  depends_on = [
+	aws_s3_bucket_public_access_block.default,
+	aws_s3_bucket_ownership_controls.default,
+  ]
+
+  bucket = aws_s3_bucket.default[0].id
+  acl    = "public-read"
+}
+
 # AWS only supports a single bucket policy on a bucket. You can combine multiple Statements into a single policy, but not attach multiple policies.
 # https://github.com/hashicorp/terraform/issues/10543
 resource "aws_s3_bucket_policy" "default" {
