@@ -18,7 +18,7 @@ locals {
   }
 }
 
-module "logs" {
+/*module "logs" {
   source                   = "cloudposse/s3-log-storage/aws"
   version                  = "0.20.0"
   attributes               = ["logs"]
@@ -29,7 +29,7 @@ module "logs" {
   force_destroy            = var.force_destroy
 
   context = module.this.context
-}
+}*/
 
 module "default_label" {
   source     = "cloudposse/label/null"
@@ -49,13 +49,13 @@ resource "aws_s3_bucket" "default" {
   tags          = module.default_label.tags
   force_destroy = var.force_destroy
 
-  dynamic "logging" {
-    for_each = var.logs_enabled ? ["true"] : []
-    content {
-      target_bucket = module.logs.bucket_id
-      target_prefix = module.logs.prefix
-    }
-  }
+  #dynamic "logging" {
+  #  for_each = var.logs_enabled ? ["true"] : []
+  #  content {
+  #    target_bucket = module.logs.bucket_id
+  #    target_prefix = module.logs.prefix
+  #  }
+  #}
 
   dynamic "website" {
     for_each = local.website_config[var.redirect_all_requests_to == "" ? "default" : "redirect_all"]
