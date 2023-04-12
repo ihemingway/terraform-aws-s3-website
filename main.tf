@@ -39,7 +39,7 @@ module "default_label" {
 }
 
 resource "aws_s3_bucket" "default" {
-  #count = local.enabled ? 1 : 0
+  count = local.enabled ? 1 : 0
 
   #bridgecrew:skip=BC_AWS_S3_1:The bucket used for a public static website. (https://docs.bridgecrew.io/docs/s3_1-acl-read-permissions-everyone)
   #bridgecrew:skip=BC_AWS_S3_14:Skipping `Ensure all data stored in the S3 bucket is securely encrypted at rest` check until bridgecrew will support dynamic blocks (https://github.com/bridgecrewio/checkov/issues/776).
@@ -109,7 +109,7 @@ resource "aws_s3_bucket" "default" {
 }
 
 resource "aws_s3_bucket_ownership_controls" "default" {
-  bucket = aws_s3_bucket.default.id
+  bucket = aws_s3_bucket.default[0].id
 
   rule {
     object_ownership = "BucketOwnerPreferred"
@@ -117,7 +117,7 @@ resource "aws_s3_bucket_ownership_controls" "default" {
 }
 
 resource "aws_s3_bucket_public_access_block" "default" {
-  bucket = aws_s3_bucket.default.id
+  bucket = aws_s3_bucket.default[0].id
 
   block_public_acls       = false
   block_public_policy     = false
@@ -131,21 +131,21 @@ resource "aws_s3_bucket_acl" "default" {
 	aws_s3_bucket_ownership_controls.default,
   ]
 
-  bucket = aws_s3_bucket.default.id
+  bucket = aws_s3_bucket.default[0].id
   acl    = "public-read"
 }
 
 # AWS only supports a single bucket policy on a bucket. You can combine multiple Statements into a single policy, but not attach multiple policies.
 # https://github.com/hashicorp/terraform/issues/10543
 resource "aws_s3_bucket_policy" "default" {
-  #count = local.enabled ? 1 : 0
+  count = local.enabled ? 1 : 0
 
-  bucket = aws_s3_bucket.default.id
+  bucket = aws_s3_bucket.default[0].id
   policy = data.aws_iam_policy_document.default[0].json
 }
 
 data "aws_iam_policy_document" "default" {
-  #count = local.enabled ? 1 : 0
+  count = local.enabled ? 1 : 0
 
   statement {
     actions = ["s3:GetObject"]
@@ -258,7 +258,7 @@ data "aws_iam_policy_document" "default" {
 }
 
 data "aws_iam_policy_document" "replication" {
-  #count = local.enabled ? signum(length(var.replication_source_principal_arns)) : 0
+  count = local.enabled ? signum(length(var.replication_source_principal_arns)) : 0
 
   statement {
     principals {
