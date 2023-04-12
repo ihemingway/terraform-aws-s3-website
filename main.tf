@@ -108,6 +108,14 @@ resource "aws_s3_bucket" "default" {
   }
 }
 
+resource "aws_s3_bucket_ownership_controls" "example" {
+  bucket = aws_s3_bucket.default[0].id
+
+  rule {
+    object_ownership = "ObjectWriter"
+  }
+}
+    
 # AWS only supports a single bucket policy on a bucket. You can combine multiple Statements into a single policy, but not attach multiple policies.
 # https://github.com/hashicorp/terraform/issues/10543
 resource "aws_s3_bucket_policy" "default" {
